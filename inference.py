@@ -1,52 +1,35 @@
-import pandas as pd
+from feast import FeatureStore
 import joblib
-from google.cloud import storage
-from sklearn import metrics
-import sys
-import os
+import pandas as pd
+import warnings
+warnings.filterwarnings("ignore") # Hides standard sklearn/numpy warnings
 
-# --- CONFIGURATION ---
-PROJECT_ID = "project-0e0c3cc6-a540-41ce-8f5"             
-BUCKET_NAME = "mlops-week-1-harshalgunjal"    
+# Connect to the Feature Store
+store = FeatureStore(repo_path="iris_feature_repo/feature_repo")
 
-def download_from_gcs(bucket_name, source_blob_name, destination_file_name):
-    storage_client = storage.Client(project=PROJECT_ID)
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(source_blob_name)
-    blob.download_to_filename(destination_file_name)
+# Load the trained model
+model = joblib.load("model.joblib")
 
-# 1. Get the latest timestamp folder
-timestamp = None
-if len(sys.argv) > 1:
-    timestamp = sys.argv[1] # Allow passing timestamp manually via command line
-elif os.path.exists("latest_run.txt"):
-    with open("latest_run.txt", "r") as f:
-        timestamp = f.read().strip()
+# Simulate an inference request for a specific entity ID
+entity_rows = [{"iris_id": 1001}]
 
-if not timestamp:
-    print("Error: Could not find latest_run.txt or timestamp argument.")
-    sys.exit(1)
+# Fetch Online Features (Real-Time)
+online_features = store.get_online_features(
+    features=[
+        "iris_features:sepal_length",
+        "iris_features:sepal_width",
+        "iris_features:petal_length",
+        "iris_features:petal_width",
+    ],
+    entity_rows=entity_rows
+).to_dict()
 
-print(f"Starting inference using model from run: {timestamp}")
+# Convert to DataFrame
+features_df = pd.DataFrame.from_dict(online_features)
+features_df = features_df[['sepal_length', 'sepal_width', 'petal_length', 'petal_width']]
 
-# 2. Fetch model and eval data from GCS
-print("Downloading model and eval data from GCS...")
-download_from_gcs(BUCKET_NAME, f"artifacts/{timestamp}/model.joblib", "model_local.joblib")
-download_from_gcs(BUCKET_NAME, "data/eval.csv", "eval_local.csv")
+# Predict
+prediction = model.predict(features_df)
 
-# 3. Load data and model
-test_data = pd.read_csv("eval_local.csv")
-X_test = test_data[['sepal_length','sepal_width','petal_length','petal_width']]
-y_test = test_data['species']
-
-model = joblib.load("model_local.joblib")
-
-# 4. Predict and evaluate
-predictions = model.predict(X_test)
-accuracy = metrics.accuracy_score(y_test, predictions)
-
-print("\n===================================")
-print(f" INFERENCE COMPLETE")
-print(f" Model Timestamp: {timestamp}")
-print(f" Model Accuracy:  {accuracy:.3f}")
-print("===================================\n")
+print(f"\nFeatures retrieved from Online Store for Iris 1001: \n{features_df}")
+print(f"Prediction: {prediction[0]}")

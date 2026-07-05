@@ -1,16 +1,19 @@
-# Week 1 MLOps Assignment: Vertex AI & GCS Pipeline
+# Week 3 MLOps Assignment: Feast Feature Store Integration
 
-This repository contains the bare-bone ML pipeline using GCP components to train an IRIS classification model. 
+This repository contains the Week 3 assignment for integrating a Feast feature store into an ML pipeline to solve training-serving skew.
 
-## Files Included:
-1. **`data_prep.py`**: Reads local `iris.csv`, splits it into train/eval sets (0.6/0.4), creates a GCS bucket, and uploads the datasets to the cloud.
-2. **`train.py`**: Fetches `train.csv` from GCS, trains a Decision Tree model (`max_depth=3`), saves it locally as a `.joblib` file, and uploads the artifact to a dynamically generated timestamped folder (`artifacts/<timestamp>/model.joblib`) in GCS.
-3. **`inference.py`**: Identifies the latest model execution timestamp, downloads the corresponding `model.joblib` and `eval.csv` from GCS, runs predictions, and prints the accuracy score.
+## File Utility
 
-## Execution Instructions:
-Run the files in the following order:
-```bash
-python data_prep.py
-python train.py
-python inference.py
-```
+*   **`prep_data.py`**: A script used to convert the raw time-aware CSV dataset into a Parquet format required by Feast.
+*   **`iris_feature_repo/feature_repo/features.py`**: Contains the Feast definitions, including the data source, the entity (`iris_id`), and the Feature View with a 10-year TTL to prevent data staleness.
+*   **`iris_feature_repo/feature_repo/feature_store.yaml`**: The configuration file that tells Feast to use a local provider and an SQLite database for the online store.
+*   **`train.py`**: The model training script. It connects to the Feast offline store to fetch historical, point-in-time correct features for training a Decision Tree classifier, preventing data leakage.
+*   **`inference.py`**: The real-time serving script. It connects to the Feast online store (SQLite) to fetch the latest feature values for a specific entity and makes a prediction using the trained model.
+
+## Execution Steps
+1. Navigate to the Feast directory: `cd iris_feature_repo/feature_repo`
+2. Apply definitions: `feast apply`
+3. Materialize the online store: `feast materialize 2010-01-01T00:00:00 2030-01-01T00:00:00`
+4. Return to the root directory.
+5. Train the model: `python train.py`
+6. Run inference: `python inference.py`
