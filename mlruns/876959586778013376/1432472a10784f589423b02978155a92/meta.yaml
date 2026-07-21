@@ -1,0 +1,15 @@
+artifact_uri: file:///home/jupyter/23f2001627_MLOPS_WEEKLY_ASSIGNMENT/mlruns/876959586778013376/1432472a10784f589423b02978155a92/artifacts
+end_time: 1784655288164
+entry_point_name: ''
+experiment_id: '876959586778013376'
+lifecycle_stage: active
+run_id: 1432472a10784f589423b02978155a92
+run_name: DT_depth3_gini
+run_uuid: 1432472a10784f589423b02978155a92
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1784655284313
+status: 3
+tags: []
+user_id: jupyter

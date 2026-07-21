@@ -1,0 +1,14 @@
+aliases: []
+creation_timestamp: 1784655294565
+current_stage: Production
+description: null
+last_updated_timestamp: 1784655400472
+name: iris_classifier
+run_id: 8e87a15bec0a4e3cb11f4f1073b18e33
+run_link: null
+source: file:///home/jupyter/23f2001627_MLOPS_WEEKLY_ASSIGNMENT/mlruns/876959586778013376/8e87a15bec0a4e3cb11f4f1073b18e33/artifacts/model
+status: READY
+status_message: null
+storage_location: file:///home/jupyter/23f2001627_MLOPS_WEEKLY_ASSIGNMENT/mlruns/876959586778013376/8e87a15bec0a4e3cb11f4f1073b18e33/artifacts/model
+user_id: null
+version: 3

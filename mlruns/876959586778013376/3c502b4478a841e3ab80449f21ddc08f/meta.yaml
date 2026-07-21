@@ -1,0 +1,15 @@
+artifact_uri: file:///home/jupyter/23f2001627_MLOPS_WEEKLY_ASSIGNMENT/mlruns/876959586778013376/3c502b4478a841e3ab80449f21ddc08f/artifacts
+end_time: 1784655297742
+entry_point_name: ''
+experiment_id: '876959586778013376'
+lifecycle_stage: active
+run_id: 3c502b4478a841e3ab80449f21ddc08f
+run_name: DT_depth7_entropy
+run_uuid: 3c502b4478a841e3ab80449f21ddc08f
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1784655294570
+status: 3
+tags: []
+user_id: jupyter

@@ -1,0 +1,15 @@
+artifact_uri: file:///home/jupyter/23f2001627_MLOPS_WEEKLY_ASSIGNMENT/mlruns/299061427237993861/ed9f27c058594fc881fd228c65b21dc8/artifacts
+end_time: 1784655468342
+entry_point_name: ''
+experiment_id: '299061427237993861'
+lifecycle_stage: active
+run_id: ed9f27c058594fc881fd228c65b21dc8
+run_name: evaluation_run
+run_uuid: ed9f27c058594fc881fd228c65b21dc8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1784655468335
+status: 3
+tags: []
+user_id: jupyter
