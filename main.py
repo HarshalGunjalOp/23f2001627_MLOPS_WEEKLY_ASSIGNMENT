@@ -26,5 +26,5 @@ def predict_species(data: IrisInput):
     input_df = pd.DataFrame([data.dict()])
     prediction = model.predict(input_df)[0]
     return {
-        "predicted_class": prediction
+        "predicted_class": int(prediction)  # Cast the NumPy int to a native Python int
     }
