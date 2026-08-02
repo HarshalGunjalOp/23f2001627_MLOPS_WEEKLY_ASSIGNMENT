@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: iris-api-service
+  namespace: default
+spec:
+  type: LoadBalancer
+  selector:
+    app: iris-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8200 # Mapped to the application's exposed port
