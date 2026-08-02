@@ -15,7 +15,13 @@ spec:
     spec:
       containers:
       - name: iris-api
-        # The image will be dynamically replaced by GitHub Actions
-        image: IMAGE_PLACEHOLDER 
+        image: IMAGE_PLACEHOLDER
         ports:
         - containerPort: 8200
+        resources:
+          requests:
+            cpu: "100m"      # Guaranteed 0.1 CPU core
+            memory: "128Mi"
+          limits:
+            cpu: "250m"      # Cap at 0.25 CPU core to trigger autoscaling faster
+            memory: "256Mi"

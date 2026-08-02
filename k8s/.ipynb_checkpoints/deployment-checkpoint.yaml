@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: iris-api-deployment
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iris-api
+  template:
+    metadata:
+      labels:
+        app: iris-api
+    spec:
+      containers:
+      - name: iris-api
+        image: IMAGE_PLACEHOLDER
+        ports:
+        - containerPort: 8200
+        resources:
+          requests:
+            cpu: "100m"      # Guaranteed 0.1 CPU core
+            memory: "128Mi"
+          limits:
+            cpu: "250m"      # Cap at 0.25 CPU core to trigger autoscaling faster
+            memory: "256Mi"

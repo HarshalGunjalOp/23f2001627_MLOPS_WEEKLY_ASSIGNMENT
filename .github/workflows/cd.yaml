@@ -1,9 +1,9 @@
-name: Continuous Deployment (CD)
+name: Continuous Deployment & Stress Testing
 
 on:
   push:
     branches:
-      - week_6
+      - week_7
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT }}
@@ -14,10 +14,9 @@ env:
   CLUSTER_ZONE: us-central1-a
 
 jobs:
-  build-and-deploy:
+  build-deploy-test:
     runs-on: ubuntu-latest
     
-    # Required for Workload Identity Federation OIDC tokens
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -55,7 +54,25 @@ jobs:
 
       - name: Deploy to GKE
         run: |
-          # Inject the exact image tag into the deployment manifest
           sed -i "s|IMAGE_PLACEHOLDER|$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest|g" k8s/deployment.yaml
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/service.yaml
+          kubectl apply -f k8s/hpa.yaml
+
+      - name: Install wrk Load Tester
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wrk
+
+      - name: Wait for LoadBalancer IP and Run Stress Test
+        run: |
+          echo "Waiting for External IP..."
+          until kubectl get svc iris-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}' | grep -q .; do
+            sleep 5
+          done
+          
+          EXTERNAL_IP=$(kubectl get svc iris-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "API deployed at IP: $EXTERNAL_IP"
+          
+          echo "Running wrk load test..."
+          wrk -t4 -c1000 -d30s -s post.lua "http://$EXTERNAL_IP/predict/"
