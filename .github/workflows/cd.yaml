@@ -1,0 +1,61 @@
+name: Continuous Deployment (CD)
+
+on:
+  push:
+    branches:
+      - week_6
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT }}
+  REGION: us-central1
+  REPO_NAME: my-repo
+  IMAGE_NAME: iris-api
+  CLUSTER_NAME: test-iris-v1
+  CLUSTER_ZONE: us-central1-a
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    # Required for Workload Identity Federation OIDC tokens
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+      
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          workload_identity_provider: 'projects/${{ secrets.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
+          service_account: 'github-actions-cd@${{ secrets.GCP_PROJECT }}.iam.gserviceaccount.com'
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        
+      - name: Configure Docker Auth
+        run: gcloud auth configure-docker $REGION-docker.pkg.dev
+
+      - name: Build and Tag Docker Image
+        run: |
+          docker build -t $IMAGE_NAME .
+          docker tag $IMAGE_NAME $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest
+          
+      - name: Push Image to Artifact Registry
+        run: |
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest
+
+      - name: Get GKE Credentials
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          location: ${{ env.CLUSTER_ZONE }}
+
+      - name: Deploy to GKE
+        run: |
+          # Inject the exact image tag into the deployment manifest
+          sed -i "s|IMAGE_PLACEHOLDER|$REGION-docker.pkg.dev/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:latest|g" k8s/deployment.yaml
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
