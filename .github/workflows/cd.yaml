@@ -64,9 +64,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wrk
 
-      - name: Wait for LoadBalancer IP and Run Stress Test
+      - name: Wait for LoadBalancer and Run Stress Test
         run: |
-          echo "Waiting for External IP..."
+          echo "Waiting for External IP to be assigned..."
           until kubectl get svc iris-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}' | grep -q .; do
             sleep 5
           done
@@ -74,5 +74,11 @@ jobs:
           EXTERNAL_IP=$(kubectl get svc iris-api-service -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
           echo "API deployed at IP: $EXTERNAL_IP"
           
-          echo "Running wrk load test..."
-          wrk -t4 -c1000 -d30s -s post.lua "http://$EXTERNAL_IP/predict/"
+          echo "Waiting for Load Balancer to route traffic (this can take 2-3 minutes)..."
+          until curl -s -f --max-time 2 http://$EXTERNAL_IP/ > /dev/null; do
+            echo "Endpoint not ready yet, retrying in 10 seconds..."
+            sleep 10
+          done
+          
+          echo "Endpoint is live! Running wrk load test..."
+          wrk -t4 -c1000 -d30s -s post.lua "http://$EXTERNAL_IP/predict/" 
